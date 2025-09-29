@@ -4,15 +4,13 @@ Firebase Unity SDK
 The Firebase Unity SDK provides Unity packages for the following Firebase
 features on *iOS*, *tvOS* and *Android*.
 
-Note: Firebase Dynamic Links is not supported on tvOS.
-
 | Feature                             | Unity Package                     |
 |:-----------------------------------:|:---------------------------------:|
+| Firebase AI Logic                   | FirebaseAI.unitypackage           |
 | Firebase Analytics                  | FirebaseAnalytics.unitypackage    |
 | Firebase App Check                  | FirebaseAppCheck.unitypackage     |
 | Firebase Authentication             | FirebaseAuth.unitypackage         |
 | Firebase Crashlytics                | FirebaseCrashlytics.unitypackage  |
-| Firebase Dynamic Links (deprecated) | FirebaseDynamicLinks.unitypackage |
 | Cloud Firestore                     | FirebaseFirestore.unitypackage    |
 | Firebase Functions                  | FirebaseFunctions.unitypackage    |
 | Firebase Installations              | FirebaseInstallations.unitypackage|
@@ -31,6 +29,7 @@ desktop builds on Windows, OS X, and Linux:
 
 | Feature                            | Unity Package                     |
 |:----------------------------------:|:---------------------------------:|
+| Firebase AI Logic                  | FirebaseAI.unitypackage           |
 | Firebase Authentication            | FirebaseAuth.unitypackage         |
 | Firebase App Check                 | FirebaseAppCheck.unitypackage     |
 | Firebase Realtime Database*        | FirebaseDatabase.unitypackage     |
@@ -55,6 +54,45 @@ need to conditionally compile code when also targeting the desktop.
 The AdMob Unity plugin is distributed separately and is available from the
 [AdMob Get Started](https://firebase.google.com/docs/admob/unity/start) guide.
 
+## Platform Notes
+
+### iOS Method Swizzling
+
+On iOS, some application events (such as opening URLs and receiving
+notifications) require your application delegate to implement specific methods.
+For example, receiving a notification may require your application delegate to
+implement `application:didReceiveRemoteNotification:`. Because each iOS
+application has its own app delegate, Firebase uses _method swizzling_, which
+allows the replacement of one method with another, to attach its own handlers in
+addition to any you may have implemented.
+
+The Firebase Cloud Messaging library needs to attach
+handlers to the application delegate using method swizzling. If you are using
+these libraries, at load time, Firebase will typically identify your `AppDelegate`
+class and swizzle the required methods onto it.
+
+#### Specifying Your AppDelegate Class Directly (iOS)
+
+For a more direct approach, or if you encounter issues with the default
+method swizzling, you can explicitly tell Firebase which class is your
+application's `AppDelegate`. To do this, add the `FirebaseAppDelegateClassName`
+key to your app's `Info.plist` file:
+
+*   **Key:** `FirebaseAppDelegateClassName`
+*   **Type:** `String`
+*   **Value:** Your AppDelegate's class name (e.g., `MyCustomAppDelegate`)
+
+**Example `Info.plist` entry:**
+```xml
+<key>FirebaseAppDelegateClassName</key>
+<string>MyCustomAppDelegate</string>
+```
+
+If this key is provided with a valid class name, Firebase will use that class
+directly for its AppDelegate-related interactions. If the key is not present,
+is invalid, or the class is not found, Firebase will use its standard method
+swizzling approach.
+
 Setup
 -----
 
@@ -71,6 +109,206 @@ Support
 
 Release Notes
 -------------
+### 13.3.0
+-   Changes
+    - Firebase AI: Add support for enabling the model to use Code Execution.
+    - Messaging: Fix crash when deleting a Message with a Notification.
+      ([#1334](https://github.com/firebase/firebase-unity-sdk/issues/1334)).
+
+### 13.2.0
+-   Changes
+    - General: Update to Firebase C++ SDK version 13.1.0.
+    - General (Android): Update to Firebase Android BoM version 34.2.0.
+    - General (iOS): Update to Firebase Cocoapods version 12.2.0.
+    - Firebase AI: Add support for receiving Thought summaries when
+      generating content.
+    - Firebase AI: Remove `LiveGenerationConfig.CandidateCount`, since the
+      connection fails silently when it is set.
+
+### 13.1.0
+-   Changes
+    - Firebase AI: Add support for Developer API backend to LiveSessions.
+
+### 13.0.0
+-   Changes
+    - General: Update to Firebase C++ SDK version 13.0.0.
+    - General (Android): Update to Firebase Android BoM version 34.0.0.
+    - General (iOS): Update to Firebase Cocoapods version 12.0.0.
+    - General (iOS, tvOS): Minimum iOS and tvOS deployment target is now 15.0.
+    - General: Minimum supported editor version is now Unity 2021.
+    - Analytics: Removed deprecated `FirebaseAnalytics.ParameterGroupId`
+      and `Parameter.Dispose` methods.
+    - Auth: Removed deprecated `FirebaseUser.UpdateEmailAsync`.
+    - Dynamic Links: Removed the Dynamic Links SDK. See the [support
+      documentation](https://firebase.google.com/support/dynamic-links-faq)
+      for more information.
+    - Firebase AI: Add support for image generation via Imagen. For more info, see
+      https://firebase.google.com/docs/ai-logic/generate-images-imagen
+    - Firebase AI: Add support for Grounding with Google Search.
+    - Firebase AI: Add support for defining a Thinking budget.
+    - Firebase AI: Deprecated `CountTokensResponse.TotalBillableCharacters`, use
+      `CountTokensResponse.TotalTokens` instead.
+    - Firebase AI: Changed public field types for ReadOnlyMemory<byte> to byte[],
+      and IEnumerable to IReadOnlyList.
+    - Messaging: Removed deprecated `FirebaseMessage.Dispose`,
+      `FirebaseNotification.Dispose`, and `MessagingOptions.Dispose` methods.
+
+### 12.10.1
+-   Changes
+    - General (iOS): Change AppDelegate swizzling logic to not use `objc_copyClassList`,
+      which was causing a slow startup, and crashes on iOS 15.
+      ([#1268](https://github.com/firebase/firebase-unity-sdk/issues/1268)).
+    - General (iOS): Added an option to explicitly specify your app's `AppDelegate` class
+      name via the `FirebaseAppDelegateClassName` key in `Info.plist`. This
+      provides a more direct way for Firebase to interact with your specified
+      AppDelegate. See "Platform Notes > iOS Method Swizzling >
+      Specifying Your AppDelegate Class Directly (iOS)" for details.
+
+### 12.10.0
+-   Changes
+    - General: Update to Firebase C++ SDK version 12.8.0.
+    - General (iOS): Update to Firebase Cocoapods version 11.14.0.
+    - General (iOS, tvOS, Desktop): iOS, tvOS, and macOS SDKs are now built using Xcode 16.2.
+    - General (Android): Fix a crash with 16 KB page sizes.
+      ([#1259](https://github.com/firebase/firebase-unity-sdk/issues/1259)).
+    - Messaging (Android): Fix issue with `SubscribeAsync` task not completing when
+      a cached token is available.
+      ([#1245](https://github.com/firebase/firebase-unity-sdk/issues/1245)).
+    - Messaging (Android): Fix issue with missing theme causing a crash on Unity 6.
+      ([#1229](https://github.com/firebase/firebase-unity-sdk/issues/1229))
+
+### 12.9.0
+-   Changes
+    - General: Update to EDM4U version 1.2.186.
+    - General: Fixed issue of Firebase Editor on Windows requiring iOS.
+    - Firebase AI: Initial release of Firebase AI Logic, with support
+      for Android, iOS, and desktop platforms.
+      For more info, see https://firebase.google.com/docs/vertex-ai
+
+### 12.8.0
+-   Changes
+    - General: Update to Firebase C++ SDK version 12.7.0.
+    - General (iOS): Update to Firebase Cocoapods version 11.10.0.
+    - General (Android): Update to Firebase Android BoM version 33.11.0.
+
+### 12.7.0
+- Changes
+    - General (iOS): Update to Firebase Cocoapods version 11.9.0.
+    - General (Android): Update to Firebase Android BoM version 33.10.0.
+    - Crashlytics: Fix a problem with on-demand fatals blocking audio playback.
+
+### 12.6.0
+- Changes
+    - General: Update to Firebase C++ SDK version 12.6.0.
+    - General (iOS): Update to Firebase Cocoapods version 11.8.1.
+    - General (Android): Update to Firebase Android BoM version 33.9.0.
+    - General: Update to EDM4U version 1.2.185.
+    - General (Android): Support 16 KB page sizes, needed by Android 15.
+      For more info, see https://developer.android.com/guide/practices/page-sizes
+
+### 12.5.0
+- Changes
+    - General: Update to Firebase C++ SDK version 12.5.0.
+    - General (iOS): Update to Firebase Cocoapods version 11.6.0.
+    - General (Android): Update to Firebase Android BoM version 33.7.0.
+
+### 12.4.1
+- Changes
+    - General: Remove unresolved SWIG string symbols.
+      ([#1139](https://github.com/firebase/firebase-unity-sdk/issues/1139)).
+
+### 12.4.0
+- Changes
+    - General: Update to Firebase C++ SDK version 12.4.0.
+    - General (iOS): Update to Firebase Cocoapods version 11.4.2.
+    - General (Android): Update to Firebase Android BoM version 33.5.1.
+    - General (Android): Reduced minSdkVersion back to 23.
+    - Analytics: Add support for Parameters of Lists of Dictionaries, needed
+      by some events such as ViewCart.
+      ([#1056](https://github.com/firebase/firebase-unity-sdk/issues/1056)).
+    - Analytics: Renamed ParameterGroupId to ParameterGroupID, to be
+      consistent with other similarly named variables. ParameterGroupId
+      is considered deprecated, and will be removed in the future.
+    - Analytics: Deprecated the Dispose functions, as they are no longer
+      necessary for cleaning up memory.
+    - Auth (Android): Setting PhotoUrl to empty string or null with
+      UpdateUserProfile clears the field, making it consistent with the
+      other platforms.
+      ([#1112](https://github.com/firebase/firebase-unity-sdk/issues/1112)).
+
+### 12.3.0
+- Changes
+    - General: Update to Firebase C++ SDK version 12.3.0.
+    - General (Android): Update to Firebase Android BoM version 33.3.0.
+    - General (Android): Updated the minSdkVersion to 24.
+    - General (iOS): Update to Firebase Cocoapods version 11.2.0.
+    - General: Update to EDM4U version 1.2.183.
+    - Messaging (Android): Fixed issue with TokenReceived not being called
+      when the application has a cached token from a previous run.
+      https://github.com/firebase/quickstart-unity/issues/1088.
+    - Remote Config: Fixed ConfigInfo fields to default to 0 when
+      not throttled or having previous fetch data.
+      ([#1058](https://github.com/firebase/firebase-unity-sdk/issues/1058)).
+
+### 12.2.1
+- Changes
+    - Messaging: Fixed a crash when opening a push notification.
+      ([#1091](https://github.com/firebase/firebase-unity-sdk/issues/1091)).
+
+### 12.2.0
+- Changes
+    - General: Update to Firebase C++ SDK version 12.2.0.
+    - General (Android): Update to Firebase Android BoM version 33.1.2.
+    - General (iOS): Update to Firebase Cocoapods version 11.0.0.
+    - General: Update to EDM4U version 1.2.182.
+    - Messaging: Deprecated the Dispose functions, as they are no longer
+      necessary for cleaning up memory.
+
+### 12.1.0
+- Changes
+    - General: Update to Firebase C++ SDK version 12.1.0.
+    - General (Android): Update to Firebase Android BoM version 33.1.1.
+    - General (iOS): Update to Firebase Cocoapods version 10.28.1.
+    - General: Update to EDM4U version 1.2.181.
+    - Analytics (iOS): Add support for
+      `InitiateOnDeviceConversionMeasurementWithHashedEmailAddress` and
+      `InitiateOnDeviceConversionMeasurementWithHashedPhoneNumber`.
+    - Messaging (Android): Fixed a potential race condition on receiving
+      messages after cleanup.
+      ([#1030](https://github.com/firebase/firebase-unity-sdk/issues/1030)).
+    - Messaging (iOS): Fixed an issue with notifications being lost if they
+      were received before Firebase Messaging was initialized.
+      ([#377](https://github.com/firebase/firebase-unity-sdk/issues/377)).
+
+### 12.0.0
+- Changes
+    - General: Update to Firebase C++ SDK version 12.0.0.
+    - General (Android): Update to Firebase Android BoM version 33.0.0.
+    - General (Android): Updated minSdkVersion to 23, and targetSdkVersion
+      and compileSdkVersion to 34.
+    - General (iOS): Update to Firebase Cocoapods version 10.25.0.
+    - General (iOS): Minimum iOS deployment target is now 13.0.
+    - General: Minimum supported editor version is now Unity 2020.
+    - Auth: Remove deprecated calls involving `SignInResult`, most of
+      which were appended with `_DEPRECATED`.
+    - Remote Config: Remove deprecated `ConfigSettings.MinimumFetchInternalInMilliseconds`,
+      use `ConfigSettings.MinimumFetchIntervalInMilliseconds` instead.
+
+### 11.9.0
+- Changes
+    - General: Update to Firebase C++ SDK version 11.10.0.
+    - General (Android): Update to Firebase Android BoM version 32.8.1.
+    - General (iOS): Update to Firebase Cocoapods version 10.24.0.
+    - App Check: Fix potential crash when fetching a token.
+      ([#877](https://github.com/firebase/firebase-unity-sdk/issues/877)).
+    - Storage (Desktop): Removed 5-minute timeout for uploads and downloads.
+      ([#968](https://github.com/firebase/firebase-unity-sdk/issues/968)).
+
+### 11.8.1
+- Changes
+    - Firestore (iOS): Fix undefined absl symbols error.
+      ([#974](https://github.com/firebase/firebase-unity-sdk/issues/974))
+
 ### 11.8.0
 - Changes
     - General: Update to Firebase C++ SDK version 11.9.0.
